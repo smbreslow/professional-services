@@ -20,7 +20,6 @@
 export PROJECT_ID="smb-lab2"
 ## Name of new Service Account for log export to Datadog
 export SA_NAME="test-id456"
-export SA_NAME_KEY=$SA_NAME"_key"
 ## Path for JSON key export (no trailing "/")
 export SA_KEY_PATH="/usr/local/google/home/sbreslow/Desktop"
 ## Name of new Pub/Sub topic (will also be used for Pub/Sub subscription)
@@ -55,10 +54,6 @@ gcloud iam service-accounts create $SA_NAME \
 ## Create service account key
 gcloud iam service-accounts keys create $SA_KEY_PATH/$SA_NAME.json \
   --iam-account $SA_NAME@$PROJECT_ID.iam.gserviceaccount.com
-## Export service account key to file
-grep -Po 'private_key\": \"\K.*(?<=n)' $SA_KEY_PATH/$SA_NAME.json \
-  > $SA_KEY_PATH/$SA_NAME_KEY.json
-sed -i 's/\\n/\n/g' $SA_NAME_KEY.json
 
 ## Grant service account permissions
 gcloud projects add-iam-policy-binding $PROJECT_ID \
