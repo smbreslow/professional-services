@@ -11,7 +11,7 @@ This script automates the GCP configurations required to export selected logs fr
 
 ## Instructions
 
-This script must be run once for each project to be monitored via Datadog:
+This script must be run once for each GCP project to be monitored via Datadog:
 - Set variables on lines 20-30, including:
   - Project ID
   - Service Account name
