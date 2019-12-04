@@ -20,7 +20,7 @@ This script must be run once for each GCP project to be monitored via Datadog:
   - Datadog API key
   - Stackdriver Logging Sink name
 - If you have not already installed the Google Cloud SDK, uncomment lines 34-44
-- Save changes, and ake "configureExportToDatadog" executable
+- Save changes, and make "configureExportToDatadog" executable
   ```
   chmod +x /path/to/file/configureExportToDatadog
   ```
