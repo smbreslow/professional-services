@@ -22,10 +22,10 @@ This script must be run once for each project to be monitored via Datadog:
 - If you have not already installed the Google Cloud SDK, uncomment lines 34-44
 - Save changes, and ake "configureExportToDatadog" executable
   ```
-  chmod +x path\to\file\configureExportToDatadog
+  chmod +x /path/to/file/configureExportToDatadog
   ```
 - Run the script and check output for errors
   ```
-  .\path\to\file\configureExportToDatadog
+  .\/path/to/file/configureExportToDatadog
   ```
 - Upload the Service Account private key (JSON file) in the **Configuration** tab of the [Datadog Google Cloud Integration tile](http://app.datadoghq.com/account/settings#integrations/google_cloud_platform)
