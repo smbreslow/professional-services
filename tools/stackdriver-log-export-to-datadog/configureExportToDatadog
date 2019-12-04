@@ -41,7 +41,6 @@ export SINK_NAME="test-sink1"
 #  sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
 ## Update the package list and install the Cloud SDK
 #sudo apt-get update && sudo apt-get install google-cloud-sdk
-
 ## Authenticate to Cloud SDK
 #gcloud auth login
 
