@@ -1,0 +1,83 @@
+#!/bin/bash
+#
+# Configure Stackdriver log export to Datadog
+
+## Set variable names
+## GCP Project ID
+export PROJECT_ID="smb-lab2"
+## Name of new Service Account for log export to Datadog
+export SA_NAME="test-id456"
+export SA_NAME_KEY=$SA_NAME"_key"
+## Path for JSON key export (no trailing "/")
+export SA_KEY_PATH="/usr/local/google/home/sbreslow/Desktop"
+## Name of new Pub/Sub topic (will also be used for Pub/Sub subscription)
+export TOPIC_NAME="test-topic1"
+## Datadog API Key
+export API_KEY="DD_API_KEY"
+## Name of new Stackdriver log sink
+export SINK_NAME="test-sink1"
+
+## UNCOMMENT THIS SECTION IF YOU DO NOT ALREADY HAVE THE \
+## GOOGLE CLOUD SDK INSTALLED
+## Add the Cloud SDK distribution URI as a package source
+#echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] \
+#  http://packages.cloud.google.com/apt cloud-sdk main" | \
+#  sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+## Import the Google Cloud Platform public key
+#curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | \
+#  sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+## Update the package list and install the Cloud SDK
+#sudo apt-get update && sudo apt-get install google-cloud-sdk
+
+## Authenticate to Cloud SDK
+#gcloud auth login
+
+## Set Cloud SDK project
+gcloud config set project $PROJECT_ID
+
+## Create new service account
+gcloud iam service-accounts create $SA_NAME \
+    --description $SA_NAME \
+    --display-name $SA_NAME
+
+## Create service account key
+gcloud iam service-accounts keys create $SA_KEY_PATH/$SA_NAME.json \
+  --iam-account $SA_NAME@$PROJECT_ID.iam.gserviceaccount.com
+## Export service account key to file
+grep -Po 'private_key\": \"\K.*(?<=n)' $SA_KEY_PATH/$SA_NAME.json \
+  > $SA_KEY_PATH/$SA_NAME_KEY.json
+sed -i 's/\\n/\n/g' $SA_NAME_KEY.json
+
+## Grant service account permissions
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/cloudasset.viewer
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/compute.viewer
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member serviceAccount:$SA_NAME@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/monitoring.viewer \
+
+## Create Pub/Sub topic
+gcloud pubsub topics create $TOPIC_NAME
+
+## Set Pub/Sub topic permissions
+#gcloud pubsub topics add-iam-policy-binding $TOPIC_NAME \
+#  --member serviceAccount:cloud-logs@system.gserviceaccount.com \
+#  --role roles/pubsub.publisher
+
+## Create Pub/Sub subscription
+gcloud pubsub subscriptions create $TOPIC_NAME --topic $TOPIC_NAME \
+  --push-endpoint="https://gcp-intake.logs.datadoghq.eu/v1/input/$API_KEY/"
+
+## Create Stackdriver log sink
+gcloud logging sinks create $SINK_NAME \
+  pubsub.googleapis.com/projects/$PROJECT_ID/topics/$TOPIC_NAME \
+  --log-filter ""
+
+## Set Pub/Sub topic permissions for Stackdriver log sink
+export SINK_SA=$(gcloud logging sinks describe $SINK_NAME \
+  | grep -Po 'writerIdentity: \K.*')
+gcloud pubsub topics add-iam-policy-binding $TOPIC_NAME \
+   --member $SINK_SA --role roles/pubsub.publisher
